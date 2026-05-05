@@ -4,7 +4,7 @@ Advanced Network Security and Architectures (SAAR) project focused on designing,
 
 ---
 
-## 🚀 Overview
+##  Overview
 
 This repository contains multiple hands-on labs exploring network security from both **offensive and defensive perspectives**. The project was developed using simulated environments (GNS3, Linux VMs) and focuses on:
 
@@ -16,38 +16,38 @@ This repository contains multiple hands-on labs exploring network security from 
 ---
 ## 🔐 Key Topics Covered
 
-### 🔴 Network Attacks
+### Network Attacks
 - MAC Table Overflow  
 - DHCP Spoofing  
 - ARP Poisoning (Man-in-the-Middle)  
 - DNS Spoofing  
 - RIP Poisoning  
 
-### 🟢 Defensive Mechanisms
+### Defensive Mechanisms
 - Port Security  
 - DHCP Snooping  
 - Dynamic ARP Inspection (DAI)  
 - Firewall configuration (iptables / Cisco ACLs)  
 
-### 🔒 Secure Network Protocols
+### Secure Network Protocols
 - IPSec (IKEv1, IKEv2, AH, ESP)  
 - DMVPN (Phase 3)  
 - BGP/MPLS L3VPNs  
 - PKI and certificate-based authentication  
 
-### 🌐 High Availability & Load Balancing
+### High Availability & Load Balancing
 - HSRP (Hot Standby Router Protocol)  
 - GLBP (Gateway Load Balancing Protocol)  
 - Server Load Balancing (SLB)  
 - Failover and redundancy testing  
 
-### 🐳 Advanced Networking
+### Advanced Networking
 - Docker networking (macvlan, VXLAN)  
 - Network namespaces and tunneling  
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **GNS3** – Network simulation  
 - **Cisco IOS** – Router and switch configuration  
@@ -58,7 +58,7 @@ This repository contains multiple hands-on labs exploring network security from 
 
 ---
 
-## 📊 Highlights
+## Highlights
 
 - Implemented and analyzed real-world network attacks and their mitigations  
 - Designed secure communication using IPSec with both symmetric and PKI-based authentication  
