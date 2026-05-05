@@ -1,0 +1,177 @@
+SLB1:
+conf t
+hostname SLB1
+!
+no cdp advertise-v2
+no ip domain-lookup
+ip routing
+ip cef
+!
+interface GigabitEthernet0/0
+ no switchport
+ ip address 192.168.1.11 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 110
+ standby 1 preempt
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+!
+interface Vlan34
+ ip address 192.168.34.11 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 110
+ standby 34 preempt
+ no shutdown
+!
+interface Vlan35
+ ip address 192.168.35.11 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 110
+ standby 35 preempt
+ no shutdown
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+end
+
+
+SLB2:
+conf t
+vlan 34
+vlan 35
+hostname SLB2
+!
+no ip domain-lookup
+no cdp advertise-v2
+ip routing
+ip cef
+!
+interface GigabitEthernet0/0
+ no switchport
+ ip address 192.168.1.12 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 105
+ standby 1 preempt
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+!
+interface Vlan34
+ ip address 192.168.34.12 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 105
+ standby 34 preempt
+ no shutdown
+!
+interface Vlan35
+ ip address 192.168.35.12 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 105
+ standby 35 preempt
+ no shutdown
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+end
+
+SLB3:
+conf t
+vlan 34
+vlan 35
+hostname SLB3
+!
+no ip domain-lookup
+no cdp advertise-v2
+ip routing
+ip cef
+!
+interface GigabitEthernet0/0
+ no switchport
+ ip address 192.168.1.13 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 100
+ standby 1 preempt
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+!
+interface Vlan34
+ ip address 192.168.34.13 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 100
+ standby 34 preempt
+ no shutdown
+!
+interface Vlan35
+ ip address 192.168.35.13 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 100
+ standby 35 preempt
+ no shutdown
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+end
+
+
+SWITCHBACKEND:
+
+conf t
+hostname SwitchBackend
+no cdp advertise-v2
+vlan 34
+vlan 35
+!
+interface GigabitEthernet0/0
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+!
+interface GigabitEthernet0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+!
+interface GigabitEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+!
+interface Gi0/3
+ switchport mode access
+ switchport access vlan 34
+!
+interface Gi1/0
+ switchport mode access
+ switchport access vlan 35
+
+end
+

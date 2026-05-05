@@ -1,0 +1,69 @@
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Firewall
+!
+ip cef
+no ip domain-lookup
+no ip icmp rate-limit unreachable
+ip tcp synwait 5
+no cdp log mismatch duplex
+!
+interface FastEthernet0/0
+ description Inside Interface
+ ip address 222.10.10.254 255.255.255.0
+ no shutdown
+ ip access-group BLOCK_OUTBOUND in
+!
+interface FastEthernet0/1
+ description Outside Interface
+ ip address 111.10.10.254 255.255.255.0
+ no shutdown
+ ip inspect PROTOCOLS in
+ ip access-group TO_SERVER in
+!
+! Define inspect rules
+ip inspect name PROTOCOLS http
+ip inspect name PROTOCOLS icmp
+!
+! Define ACL for incoming access 
+ip access-list extended TO_SERVER
+ permit tcp any host 222.10.10.1 eq 80
+ permit icmp any host 222.10.10.1
+ deny ip any any
+!
+! Define ACL to block inside-to-outside traffic
+ip access-list extended BLOCK_OUTBOUND
+ permit tcp host 222.10.10.1 any established
+ permit icmp host 222.10.10.1 any echo-reply
+ deny ip any any
+!
+ip routing
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+line aux 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+end
+

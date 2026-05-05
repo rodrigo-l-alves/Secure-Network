@@ -1,0 +1,56 @@
+sudo -s
+
+ub1-
+
+# Create namespace and veth pair
+ip addr add 10.99.0.1/30 dev ens3
+ip link set ens3 up
+ip netns add red
+ip link add vred type veth peer name vred-host
+ip link set vred netns red
+
+# Assign IP addresses
+ip addr add 10.10.0.1/24 dev vred-host
+ip link set vred-host up
+ip -n red addr add 10.10.0.2/24 dev vred
+ip -n red link set vred up
+ip -n red route add default via 10.10.0.1
+
+# Enable IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# Set up IPIP tunnel to ub2
+ip tunnel add tun0 mode ipip remote 10.99.0.2 local 10.99.0.1
+ip addr add 10.0.0.1/30 dev tun0
+ip link set tun0 up
+
+# Route blue namespace network via tunnel
+ip route add 10.20.0.0/24 via 10.0.0.2
+
+ub2- 
+
+# Create namespace and veth pair
+ip addr add 10.99.0.2/30 dev ens3
+ip link set ens3 up
+ip netns add blue
+ip link add vblue type veth peer name vblue-host
+ip link set vblue netns blue
+
+# Assign IP addresses
+ip addr add 10.20.0.1/24 dev vblue-host
+ip link set vblue-host up
+ip -n blue addr add 10.20.0.2/24 dev vblue
+ip -n blue link set vblue up
+ip -n blue route add default via 10.20.0.1
+
+# Enable IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
+# Set up IPIP tunnel to ub1
+ip tunnel add tun0 mode ipip remote 10.99.0.1 local 10.99.0.2
+ip addr add 10.0.0.2/30 dev tun0
+ip link set tun0 up
+
+# Route red namespace network via tunnel
+ip route add 10.10.0.0/24 via 10.0.0.1
+

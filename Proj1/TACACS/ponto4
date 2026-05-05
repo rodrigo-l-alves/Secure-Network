@@ -1,0 +1,1 @@
+The file /var/log/tac_plus.acct stores accounting records of all user sessions authenticated via TACACS+. It logs detailed information such as the username, source IP address, login and logout times, terminal line used (e.g., tty2), session duration, and the type of service accessed (typically shell for command-line access).

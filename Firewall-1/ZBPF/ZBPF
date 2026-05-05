@@ -1,0 +1,84 @@
+! Basic settings
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+hostname Firewall
+ip cef
+no ip domain-lookup
+no ip icmp rate-limit unreachable
+ip tcp synwait 5
+no cdp log mismatch duplex
+ip routing
+
+! Define security zones
+zone security INSIDE
+zone security OUTSIDE
+
+! Block direct access to firewall interfaces
+ip access-list extended BLOCK_TO_FIREWALL
+ deny ip any host 222.10.10.254
+ deny ip any host 111.10.10.254
+ permit ip any any
+
+! Inside interface (with ACL applied)
+interface FastEthernet0/0
+ description Inside Interface
+ ip address 222.10.10.254 255.255.255.0
+ no shutdown
+ zone-member security INSIDE
+ ip access-group BLOCK_TO_FIREWALL in
+
+! Outside interface (with ACL applied)
+interface FastEthernet0/1
+ description Outside Interface
+ ip address 111.10.10.254 255.255.255.0
+ no shutdown
+ zone-member security OUTSIDE
+ ip access-group BLOCK_TO_FIREWALL in
+
+! Allow HTTP and ICMP to the server from OUTSIDE
+ip access-list extended ALLOW_HTTP_ICMP
+ permit tcp any host 222.10.10.1 eq 80
+ permit icmp any host 222.10.10.1
+
+class-map type inspect match-any HTTP_ONLY
+ match access-group name ALLOW_HTTP_ICMP
+
+policy-map type inspect OUTSIDE_TO_INSIDE_POLICY
+ class type inspect HTTP_ONLY
+  inspect
+ class class-default
+  drop
+
+zone-pair security OUTSIDE_TO_INSIDE source OUTSIDE destination INSIDE
+ service-policy type inspect OUTSIDE_TO_INSIDE_POLICY
+
+! Drop all traffic from INSIDE to OUTSIDE
+ip access-list extended BLOCK_INSIDE_ALL
+ permit ip any any
+
+class-map type inspect match-any BLOCK_ALL
+ match access-group name BLOCK_INSIDE_ALL
+
+policy-map type inspect INSIDE_TO_OUTSIDE_POLICY
+ class type inspect BLOCK_ALL
+  drop
+
+zone-pair security INSIDE_TO_OUTSIDE source INSIDE destination OUTSIDE
+ service-policy type inspect INSIDE_TO_OUTSIDE_POLICY
+
+! Console settings
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+
+line aux 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+
+end
+

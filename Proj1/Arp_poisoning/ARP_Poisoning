@@ -1,0 +1,141 @@
+rui-valadas-
+python3 arpmitm.py eth0 20.0.0.2 20.0.0.3
+
+Host1- 
+
+	conf t
+	interface FastEthernet0/0
+	ip address dhcp
+	no shutdown
+	exit
+	exit
+
+	show ip interface brief
+
+	conf t
+	no ip routing
+	exit
+	
+	show arp
+
+	ping 20.0.0.2
+	show arp
+
+after running python do that:
+
+	ping 20.0.0.2
+
+after doing the DAI do:
+
+	conf t
+	interface FastEthernet0/0
+	shutdown
+	no shutdown
+	end
+
+	show ip interface brief
+	ping 20.0.0.5
+
+Host2-
+
+	conf t
+	interface FastEthernet0/0
+	ip address dhcp
+	no shutdown
+	exit
+	exit
+
+	show ip interface brief
+
+	conf t
+	no ip routing
+	exit
+
+	show arp
+
+	ping 20.0.0.3
+
+after running python:
+
+	ping 20.0.0.3
+
+after doing the DAI do:
+
+	conf t
+	interface FastEthernet0/0
+	shutdown
+	no shutdown
+	end
+
+	show ip interface brief
+
+	ping 20.0.0.4
+	show arp
+
+DHCP-
+
+	conf t
+	interface FastEthernet0/0
+	ip address 20.0.0.1 255.255.255.0
+	no shutdown
+	exit
+	
+	ip dhcp pool 0
+	network 20.0.0.0 255.255.255.0
+	default-router 20.0.0.1
+	exit
+	
+	exit
+	
+	show ip dhcp pool
+	
+	show ip interface brief
+
+
+Switch-
+	conf t
+	no cdp advertise-v2
+	exit
+
+	show vlan
+
+CounterMeasure
+
+	conf t
+	no ip dhcp snooping information option
+	ip dhcp snooping
+	ip dhcp snooping vlan 1
+
+	interface GigabitEthernet0/0
+	description Host1
+	switchport mode access
+
+	interface GigabitEthernet0/1
+	description Host2
+	switchport mode access
+
+	interface GigabitEthernet0/2
+	description DHCP Server
+	switchport mode access
+	ip dhcp snooping trust
+	ip arp inspection trust
+
+	interface GigabitEthernet0/3
+	description saar-tools (attacker)
+	switchport mode access
+
+	exit
+	exit
+
+	show ip dhcp snooping
+	show ip arp inspection interfaces
+	show ip dhcp snooping binding
+
+	conf t
+	interface GigabitEthernet0/3
+	shutdown
+	no shutdown
+	exit
+	exit
+
+	show ip dhcp snooping binding

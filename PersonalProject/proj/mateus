@@ -1,0 +1,119 @@
+conf t
+hostname SLB
+no cdp advertise-v2
+no ip device tracking
+no ip domain-lookup
+ip routing
+ip cef
+
+track 1 interface GigabitEthernet0/0 line-protocol
+track 2 interface GigabitEthernet0/1 line-protocol
+
+! Direct routed link to WW1
+interface GigabitEthernet0/0
+ description === Routed link to WW1 ===
+ no switchport
+ ip address 192.168.34.1 255.255.255.0
+ no shutdown
+
+! Direct routed link to WW2
+interface GigabitEthernet0/1
+ description === Routed link to WW2 ===
+ no switchport
+ ip address 192.168.35.1 255.255.255.0
+ no shutdown
+
+! Client-facing interface
+interface GigabitEthernet0/2
+ description === Client-facing interface ===
+ no switchport
+ ip address 192.168.1.11 255.255.255.0
+ ip slb vserver VSERVER
+ no shutdown
+
+! SLB config
+ip slb
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+  weight 2
+  track 1
+ exit
+ real 192.168.35.5
+  inservice
+  weight 1
+  track 2
+ exit
+ predictor roundrobin
+!
+ip slb vserver VSERVER
+ virtual 192.168.1.10 tcp www
+ serverfarm SERVERFARM
+ inservice
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+end
+
+
+
+WW1-
+conf t
+ip default-gateway 192.168.34.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.34.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+WW2- 
+conf t
+ip default-gateway 192.168.35.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.35.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+SLB-
+# 1. Show virtual server status (VIP)
+show ip slb vserver
+
+# 2. Show real servers and their current connection counts
+show ip slb reals
+
+# 3. Show per-connection mappings from client to real servers
+show ip slb conns
+
+# 4. Show overall SLB session statistics
+show ip slb stats
+
+
+conf t
+ip slb vserver VSERVER
+ inservice
+ 
+ 
+ 
+ 
+ 
+ 
+ conf t
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  no inservice
+end
+
+conf t
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+end
+
+
+ 

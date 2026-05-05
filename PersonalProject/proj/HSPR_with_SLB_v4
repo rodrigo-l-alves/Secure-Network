@@ -1,0 +1,325 @@
+SLB1:
+
+conf t
+hostname SLB1
+no cdp advertise-v2
+no ip device tracking
+no ip domain-lookup
+ip routing
+ip cef
+
+! VLANs
+vlan 34
+vlan 35
+
+! Client-facing interface with HSRP
+interface GigabitEthernet0/0
+ description === Client-facing routed interface ===
+ no switchport
+ ip address 192.168.1.11 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 110
+ standby 1 preempt
+ ip slb vserver VSERVER
+ no shutdown
+
+! Trunk to Backend Switch
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+
+! VLAN interfaces (no HSRP!)
+interface Vlan34
+ ip address 192.168.34.11 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 110
+ standby 34 preempt
+ no shutdown
+
+interface Vlan35
+ ip address 192.168.35.11 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 110
+ standby 35 preempt
+ no shutdown
+
+! SLB config
+ip slb
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+  weight 2
+ exit
+ real 192.168.35.5
+  inservice
+  weight 1
+ exit
+ predictor roundrobin
+!
+ip slb vserver VSERVER
+ virtual 192.168.1.10 tcp www
+ serverfarm SERVERFARM
+ inservice
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+end
+
+SLB2:
+
+conf t
+hostname SLB2
+no cdp advertise-v2
+no ip device tracking
+no ip domain-lookup
+ip routing
+ip cef
+vlan 34
+vlan 35
+!
+interface GigabitEthernet0/0
+ description === Client-facing routed interface ===
+ no switchport
+ ip address 192.168.1.12 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 105
+ standby 1 preempt
+ ip slb vserver VSERVER
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+!
+interface Vlan34
+ ip address 192.168.34.12 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 105
+ standby 34 preempt
+ no shutdown
+!
+interface Vlan35
+ ip address 192.168.35.12 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 105
+ standby 35 preempt
+ no shutdown
+!
+ip slb
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+  weight 2
+ exit
+ real 192.168.35.5
+  inservice
+  weight 1
+ exit
+ predictor roundrobin
+!
+ip slb vserver VSERVER
+ virtual 192.168.1.10 tcp www
+ serverfarm SERVERFARM
+ no inservice
+!
+interface GigabitEthernet0/0
+ ip slb vserver VSERVER
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+end
+
+
+SLB3:
+
+conf t
+hostname SLB3
+no cdp advertise-v2
+no ip device tracking
+no ip domain-lookup
+ip routing
+ip cef
+vlan 34
+vlan 35
+!
+interface GigabitEthernet0/0
+ description === Client-facing routed interface ===
+ no switchport
+ ip address 192.168.1.13 255.255.255.0
+ standby 1 ip 192.168.1.254
+ standby 1 priority 100
+ standby 1 preempt
+ ip slb vserver VSERVER
+ no shutdown
+!
+interface GigabitEthernet0/1
+ description === Trunk to Backend Switch ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+!
+interface Vlan34
+ ip address 192.168.34.13 255.255.255.0
+ standby 34 ip 192.168.34.1
+ standby 34 priority 100
+ standby 34 preempt
+ no shutdown
+!
+interface Vlan35
+ ip address 192.168.35.13 255.255.255.0
+ standby 35 ip 192.168.35.1
+ standby 35 priority 100
+ standby 35 preempt
+ no shutdown
+!
+ip slb
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+  weight 2
+ exit
+ real 192.168.35.5
+  inservice
+  weight 1
+ exit
+ predictor roundrobin
+!
+ip slb vserver VSERVER
+ virtual 192.168.1.10 tcp www
+ serverfarm SERVERFARM
+ no inservice
+!
+interface GigabitEthernet0/0
+ ip slb vserver VSERVER
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+end
+
+conf t
+hostname SwitchBackend
+no cdp advertise-v2
+
+! VLAN definitions
+vlan 34
+vlan 35
+
+! Trunk interfaces to SLB devices
+interface GigabitEthernet0/0
+ description === Trunk to SLB1 ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+
+interface GigabitEthernet0/1
+ description === Trunk to SLB2 ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+
+interface GigabitEthernet0/2
+ description === Trunk to SLB3 ===
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk allowed vlan 34,35
+ no shutdown
+
+! Access ports to backend servers
+interface GigabitEthernet0/3
+ description === Access to WW1 (VLAN 34) ===
+ switchport mode access
+ switchport access vlan 34
+ no shutdown
+
+interface GigabitEthernet1/0
+ description === Access to WW2 (VLAN 35) ===
+ switchport mode access
+ switchport access vlan 35
+ no shutdown
+
+! SVIs for internal ping/diagnostics
+interface Vlan34
+ ip address 192.168.34.10 255.255.255.0
+ no shutdown
+
+interface Vlan35
+ ip address 192.168.35.10 255.255.255.0
+ no shutdown
+
+! No default gateway to keep neutrality across VLANs
+! ip default-gateway 192.168.34.1   <-- OMITTED ON PURPOSE
+
+end
+
+
+WW1-
+conf t
+ip default-gateway 192.168.34.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.34.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+WW2- 
+conf t
+ip default-gateway 192.168.35.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.35.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+SLB-
+# 1. Show virtual server status (VIP)
+show ip slb vserver
+
+# 2. Show real servers and their current connection counts
+show ip slb reals
+
+# 3. Show per-connection mappings from client to real servers
+show ip slb conns
+
+# 4. Show overall SLB session statistics
+show ip slb stats
+
+
+conf t
+ip slb vserver VSERVER
+ inservice
+ 
+ 
+ conf t
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  no inservice
+end
+
+conf t
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+end
+
+
+ 

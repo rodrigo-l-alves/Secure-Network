@@ -1,0 +1,45 @@
+Router1-
+	conf t
+	
+	access-list 1 permit any
+	ip nat inside source list 1 interface FastEthernet0/1 overload
+	
+	interface FastEthernet0/0
+	ip address 20.0.0.254 255.255.255.0
+	ip nat inside
+	no shutdown
+	
+	interface FastEthernet0/1
+	ip address dhcp
+	ip nat outside
+	no shutdown
+	
+	end
+	write memory
+
+rui-valadas-
+
+	ip addr add 20.0.0.3/24 dev eth0
+	ip route add default via 20.0.0.254
+	
+	python3 dnsspoof.py eth0 atk.txt 20.0.0.0/24
+
+
+
+WebBrowser-
+
+	auto eth0
+	iface eth0 inet static
+    	     address 20.0.0.1
+    	     netmask 255.255.255.0
+    	     gateway 20.0.0.254
+    	     up echo nameserver 8.8.8.8 > /etc/resolv.conf
+
+FakeWebServer-
+
+	ip addr add 20.0.0.2/24 dev eth0
+	ip route add default via 20.0.0.254
+	service nginx start
+
+
+

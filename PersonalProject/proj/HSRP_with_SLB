@@ -1,0 +1,102 @@
+SLB-
+
+conf t
+no cdp advertise-v2
+ip routing
+end
+conf t
+vlan 34
+vlan 35
+vlan 100
+!
+interface vlan34
+ ip address 192.168.34.1 255.255.255.0
+ no shutdown
+!
+interface vlan35
+ ip address 192.168.35.1 255.255.255.0
+ no shutdown
+!
+interface vlan100
+ ip address 192.168.100.2 255.255.255.0
+ no shutdown
+end
+conf t
+interface gi0/0
+ description Link to R4
+ switchport mode access
+ switchport access vlan 100
+ no shutdown
+!
+interface gi0/1
+ description Link to WWW1
+ switchport mode access
+ switchport access vlan 34
+ no shutdown
+!
+interface gi0/2
+ description Link to WWW2
+ switchport mode access
+ switchport access vlan 35
+ no shutdown
+end
+conf t
+ip slb serverfarm SERVERFARM
+ real 192.168.34.4
+  inservice
+  weight 2
+ exit
+ real 192.168.35.5
+  inservice
+  weight 1
+ exit
+ predictor roundrobin
+end
+conf t
+ip slb vserver VSERVER
+ virtual 192.168.1.10 tcp www
+ serverfarm SERVERFARM
+ inservice
+exit
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.100.1
+end
+conf t
+interface Vlan100
+ ip slb vserver VSERVER
+end
+ 
+WW1-
+conf t
+ip default-gateway 192.168.34.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.34.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+WW2- 
+conf t
+ip default-gateway 192.168.35.1
+end
+conf t
+ip route 0.0.0.0 0.0.0.0 192.168.35.1
+int l0
+ip address 192.168.1.10 255.255.255.255
+end
+
+SLB-
+# 1. Show virtual server status (VIP)
+show ip slb vserver
+
+# 2. Show real servers and their current connection counts
+show ip slb reals
+
+# 3. Show per-connection mappings from client to real servers
+show ip slb conns
+
+# 4. Show overall SLB session statistics
+show ip slb stats
+

@@ -1,0 +1,82 @@
+ub3-
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Interface} & \textbf{IP Address} & \textbf{MAC Address} & \textbf{Belongs to} \\
+\hline
+eth0 & 10.0.0.20/24 & 02:42:0a:00:00:14 & ingress network (10.0.0.0/24) \\
+eth1 & 172.18.0.4/16 & 92:72:cd:5e:73:87 & docker\_gwbridge (NAT gateway) \\
+eth2 & 10.0.1.26/24 & 02:42:0a:00:01:1a & blue overlay (10.0.1.0/24) \\
+\hline
+\end{tabular}
+\caption{Container network interfaces and their associated networks}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Network} & \textbf{VNI} & \textbf{Subnet} \\
+\hline
+ingress & 4096 & 10.0.0.0/24 \\
+\hline
+\end{tabular}
+\caption{VXLAN VNIs assigned to overlay networks}
+\end{table}
+
+ub1-
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Interface} & \textbf{IP Address} & \textbf{MAC Address} & \textbf{Belongs to} \\
+\hline
+eth0 & 10.0.1.25/24 & 02:42:0a:00:01:19 & blue overlay (10.0.1.0/24) \\
+eth1 & 172.18.0.3/16 & 3e:3a:99:ee:c1:a3 & docker\_gwbridge (NAT gateway) \\
+eth2 & 10.0.0.19/24 & 02:42:0a:00:00:13 & ingress network (10.0.0.0/24) \\
+\hline
+\end{tabular}
+\caption{Container network interfaces on \texttt{ub1} and their associated networks}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Network} & \textbf{VNI} & \textbf{Subnet} \\
+\hline
+ingress & 4096 & 10.0.0.0/24 \\
+\hline
+\end{tabular}
+\caption{VXLAN VNIs assigned to overlay networks on \texttt{ub1}}
+\end{table}
+
+ub2-
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Interface} & \textbf{IP Address} & \textbf{MAC Address} & \textbf{Belongs to} \\
+\hline
+eth0 & 10.0.0.16/24 & 02:42:0a:00:00:10 & ingress network (10.0.0.0/24) \\
+eth1 & 172.18.0.3/16 & e2:98:aa:f7:b8:fc & docker\_gwbridge (NAT gateway) \\
+eth2 & 10.0.1.21/24 & 02:42:0a:00:01:15 & blue overlay (10.0.1.0/24) \\
+\hline
+\end{tabular}
+\caption{Container network interfaces on \texttt{ub2} and their associated networks}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Network} & \textbf{VNI} & \textbf{Subnet} \\
+\hline
+ingress & 4096 & 10.0.0.0/24 \\
+\hline
+\end{tabular}
+\caption{VXLAN VNIs assigned to overlay networks on \texttt{ub2}}
+\end{table}
+
+

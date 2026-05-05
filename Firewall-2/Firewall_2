@@ -1,0 +1,127 @@
+firewall:
+	configure terminal
+	crypto key generate rsa modulus 1024
+
+Rui-valadas:
+	nmap -Pn -p 0-1023 222.10.10.254
+
+	ssh -oKexAlgorithms=+diffie-hellman-group1-sha1     -oHostKeyAlgorithms=+ssh-rsa     -oCiphers=+aes128-cbc,aes192-cbc,aes256-cbc,3des-cbc     -l admin 222.10.10.254
+
+PRx to DMZ:
+	
+	# -------- DNS Server (222.10.10.1) --------
+	ping -c 3 222.10.10.1
+	telnet 222.10.10.1 53
+	dig google.com @222.10.10.1
+
+	# -------- Mail Server (222.10.10.2) --------
+	ping -c 3 222.10.10.2
+	telnet 222.10.10.2 25     # SMTP
+	telnet 222.10.10.2 110    # POP3
+	telnet 222.10.10.2 143    # IMAP
+
+	# -------- Web Server (222.10.10.3) --------
+	ping -c 3 222.10.10.3
+	telnet 222.10.10.3 80     # HTTP
+	telnet 222.10.10.3 443    # HTTPS
+
+	# -------- Negative Test Cases (Should be BLOCKED) --------
+	telnet 222.10.10.3 22     # SSH — not allowed
+	telnet 222.10.10.4 80     # IP not allowed
+	telnet 222.10.10.1 25     # SMTP to DNS server — not allowed
+
+
+PRx to OUT:
+	# ---------- Allowed Traffic ----------
+
+	# ICMP
+	ping -c 3 192.168.122.10
+
+	# DNS (TCP and UDP)
+	telnet 192.168.122.10 53
+
+	# HTTP/HTTPS
+	telnet 192.168.122.10 80
+	telnet 192.168.122.10 443
+
+
+	# ---------- Blocked Traffic (Should be dropped) ----------
+
+	# SSH (not allowed)
+	telnet 192.168.122.10 22
+
+	# SMTP (not allowed)
+	telnet 192.168.122.10 25
+
+	# POP3 (not allowed)
+	telnet 192.168.122.10 110
+
+	# IMAP (not allowed)
+	telnet 192.168.122.10 143
+
+	# Arbitrary high port (not allowed)
+	telnet 192.168.122.10 8080
+
+DMZ to OUT:
+	# ----- Allowed Traffic -----
+
+	# ICMP (ping)
+	ping 192.168.122.10
+
+	# SMTP (TCP port 25)
+	telnet 192.168.122.10 25
+
+	# DNS (TCP and UDP)
+	telnet 192.168.122.10 53
+	
+	# ----- Blocked Traffic (should hang or time out) -----
+
+	# HTTP (should be blocked)
+	telnet 192.168.122.10 80
+
+	# HTTPS (should be blocked)
+	telnet 192.168.122.10 443
+
+	# SSH (should be blocked)
+	telnet 192.168.122.10 22
+
+	# Arbitrary port (should be blocked)
+	telnet 192.168.122.10 12345
+
+OUT to DMZ:
+	# ===== ICMP (Ping) Tests =====
+	ping -c 2 222.10.10.1      # ✅ DNS server
+	ping -c 2 222.10.10.2      # ✅ Mail server
+	ping -c 2 222.10.10.3      # ✅ Web server
+	ping -c 2 222.10.10.99     # ❌ Unauthorized DMZ host (should fail)
+
+	# ===== Web (HTTP/HTTPS) Tests =====
+	telnet 222.10.10.3 80      # ✅ Web server - HTTP
+	telnet 222.10.10.3 443     # ✅ Web server - HTTPS
+
+	telnet 222.10.10.1 80      # ❌ DNS server - should fail
+	telnet 222.10.10.99 80     # ❌ Unauthorized host - should fail
+
+	# ===== DNS Tests =====
+	dig google.com @222.10.10.1       # ✅ DNS via UDP
+	telnet 222.10.10.1 53              # ✅ DNS via TCP
+
+	dig @222.10.10.2 openai.com        # ❌ Mail server - should fail
+	dig @222.10.10.99 openai.com       # ❌ Unauthorized host - should fail
+
+	# ===== SMTP (Email) Tests =====
+	telnet 222.10.10.2 25              # ✅ Mail server - SMTP
+
+	telnet 222.10.10.3 25              # ❌ Web server - should fail
+	telnet 222.10.10.99 25             # ❌ Unauthorized host - should fail
+
+	# ===== Blocked Port Tests (Should All Fail) =====
+	telnet 222.10.10.1 21              # ❌ FTP - should fail
+	telnet 222.10.10.1 23              # ❌ Telnet - should fail
+	telnet 222.10.10.2 22              # ❌ SSH - should fail
+
+
+show access-lists ALLOW_ONLY_SSH_DHCP_TO_FW
+
+
+	

@@ -1,0 +1,133 @@
+R1:
+conf t
+hostname R1
+
+! Loopback used for Tunnel source and underlay
+interface Lo0
+ ip address 1.1.1.1 255.255.255.255
+
+! Underlay interface to RA
+interface g0/0
+ ip address 200.1.1.1 255.255.255.0
+ no shutdown
+
+! LAN interface for PC1
+interface g0/1
+ ip address 192.168.1.1 255.255.255.0
+ no shutdown
+
+! Tunnel interface - Phase 3 Hub
+interface Tunnel0
+ ip address 10.10.10.1 255.255.255.0
+ tunnel source Lo0
+ tunnel mode gre multipoint
+ ip nhrp network-id 1
+ ip nhrp map multicast dynamic 
+ ip nhrp redirect                                    
+ ip summary-address rip 0.0.0.0 0.0.0.0  
+ no shutdown
+
+! Underlay OSPF to reach spokes
+router ospf 1
+ network 200.1.1.0 0.0.0.255 area 0
+ network 1.1.1.1 0.0.0.0 area 0
+
+! Overlay RIPv2 for LAN + Tunnel
+router rip
+ version 2
+ no auto-summary
+ network 192.168.1.0
+ network 10.10.10.0
+end
+ 
+
+R2:
+conf t
+hostname R2
+
+! Loopback used for tunnel source
+interface Lo0
+ ip address 2.2.2.2 255.255.255.255
+
+! Underlay interface to RA
+interface g0/0
+ ip address 200.2.2.2 255.255.255.0
+ no shutdown
+
+! LAN interface for PC2
+interface g0/1
+ ip address 192.168.2.2 255.255.255.0
+ no shutdown
+
+! Tunnel interface - Phase 3 spoke
+int Tunnel0
+ ip add 10.10.10.2 255.255.255.0
+ tunnel source Lo0
+ tunnel mode gre multipoint
+ ip nhrp map 10.10.10.1 1.1.1.1
+ ip nhrp map multicast 1.1.1.1
+ ip nhrp nhs 10.10.10.1
+ ip nhrp network-id 1
+ ip nhrp shortcut
+
+! Underlay OSPF for reachability (to loopbacks and tunnel source IPs)
+router ospf 1
+ network 200.2.2.0 0.0.0.255 area 0
+ network 2.2.2.2 0.0.0.0 area 0
+
+! Overlay RIPv2 for LAN and tunnel
+router rip
+ version 2
+ no auto-summary
+ network 192.168.2.0
+ network 10.10.10.0
+
+end
+
+
+R3:
+conf t
+hostname R3
+
+! Loopback used for tunnel source
+interface Lo0
+ ip address 3.3.3.3 255.255.255.255
+
+! Underlay connection to RA
+interface g0/0
+ ip address 200.3.3.3 255.255.255.0
+ no shutdown
+
+! LAN interface for PC3
+interface g0/1
+ ip address 192.168.3.3 255.255.255.0
+ no shutdown
+
+! Tunnel interface - Phase 3 spoke
+int Tunnel0
+ ip add 10.10.10.3 255.255.255.0
+ tunnel source Lo0
+ tunnel mode gre multipoint
+ ip nhrp map 10.10.10.1 1.1.1.1
+ ip nhrp map multicast 1.1.1.1
+ ip nhrp nhs 10.10.10.1
+ ip nhrp network-id 1
+ ip nhrp shortcut
+
+! OSPF for underlay (reachability to hub)
+router ospf 1
+ network 200.3.3.0 0.0.0.255 area 0
+ network 3.3.3.3 0.0.0.0 area 0
+
+! RIPv2 overlay routing (LAN + tunnel)
+router rip
+ version 2
+ no auto-summary
+ network 192.168.3.0
+ network 10.10.10.0
+
+end
+
+ 
+ 
+

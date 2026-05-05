@@ -1,0 +1,79 @@
+!
+! Disable unnecessary services
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname Firewall
+!
+ip cef
+no ip domain-lookup
+no ip icmp rate-limit unreachable
+ip tcp synwait 5
+no cdp log mismatch duplex
+!
+! Define security zones
+zone security INSIDE
+zone security OUTSIDE
+!
+! Define interfaces
+interface FastEthernet0/0
+ description Inside Interface
+ ip address 222.10.10.254 255.255.255.0
+ no shutdown
+ zone-member security INSIDE
+!
+interface FastEthernet0/1
+ description Outside Interface
+ ip address 111.10.10.254 255.255.255.0
+ no shutdown
+ zone-member security OUTSIDE
+!
+! Access Control List
+ip access-list extended TO_IN_HOST
+ permit ip any host 222.10.10.1
+!
+! Class Maps
+class-map type inspect match-all ICMP_CLASSMAP
+ match access-group name TO_IN_HOST
+ match protocol icmp
+!
+class-map type inspect match-all WWW_CLASSMAP
+ match access-group name TO_IN_HOST
+ match protocol http
+!
+! Parameter Map for TCP SYN flood mitigation
+parameter-map type inspect PARMAP
+ tcp synwait-time 3
+!
+! Policy Map with Rate Limiting and SYN Protection
+policy-map type inspect DOS_POLICYMAP
+ class type inspect WWW_CLASSMAP
+  inspect PARMAP
+  police rate 128000 burst 8000
+ class type inspect ICMP_CLASSMAP
+  inspect
+  police rate 128000 burst 8000
+ class class-default
+  drop log
+!
+! Apply policy to a zone-pair
+zone-pair security OUTSIDE-TO-INSIDE source OUTSIDE destination INSIDE
+ service-policy type inspect DOS_POLICYMAP
+!
+ip routing
+!
+line con 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+line aux 0
+ exec-timeout 0 0
+ logging synchronous
+ privilege level 15
+ no login
+!
+end
+

